@@ -1,0 +1,44 @@
+version: "1"
+
+services:
+  identitydb:
+    image: postgres:alpine
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: mthn.trkmn123
+      POSTGRES_DB: CargoIdentityDatabase
+    ports:
+      - 1086:5432
+    networks:
+      - authentication_postgres
+
+  identitypgadmin:
+    container_name: Identity_pgadmin
+    image: dpage/pgadmin4
+    ports:
+      - 5051:80
+    networks:
+      - authentication_postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: mthntrkmnn1171@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: mthn.trkmn123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    restart: always
+
+
+  identityapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    depends_on:
+      - identitydb
+    networks:
+      - authentication_postgres
+
+
+networks:
+  authentication_postgres :
+    external: true
+

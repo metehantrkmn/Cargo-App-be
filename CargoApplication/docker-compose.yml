@@ -1,0 +1,44 @@
+
+services:
+
+  cargo-app-db:
+    image: postgres:alpine
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: mthn.trkmn123
+      POSTGRES_DB: CargoDatabase
+    networks:
+      - authentication_postgres
+
+    ports:
+      - 1087:5432
+
+
+  cargo-pgadmin:
+    container_name: cargo-app-pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: mthntrkmnn1171@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: mthn.trkmn123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5052:80"
+    restart: always
+    networks:
+      - authentication_postgres
+
+  cargo-source-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8088:8080"
+    depends_on:
+      - cargo-app-db
+    networks:
+      - authentication_postgres
+
+
+networks:
+  authentication_postgres :
+    external: true

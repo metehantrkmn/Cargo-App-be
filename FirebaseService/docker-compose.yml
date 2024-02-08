@@ -1,0 +1,15 @@
+
+services:
+  firebase_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8089:8080"
+    networks:
+      - authentication_postgres
+
+
+networks:
+    authentication_postgres:
+      external: true
