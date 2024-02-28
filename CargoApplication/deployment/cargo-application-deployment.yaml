@@ -1,0 +1,139 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cargo-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cargo-source-app
+  template:
+    metadata:
+      labels:
+        app: cargo-source-app
+    spec:
+      containers:
+        - name: cargo-application
+          image: cargo-source-app
+          ports:
+            - containerPort: 80
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cargo-service
+spec:
+  selector:
+    app: cargo-source-app
+  ports:
+    - protocol: TCP
+      port: 9376
+      targetPort: 80
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cargo-db-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cargo-app-db
+  template:
+    metadata:
+      labels:
+        app: cargo-app-db
+    spec:
+      containers:
+        - name: cargo-app-db
+          image: postgres:latest # You can adjust the image version as needed
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: cargo-application-secret
+                  key: db-name
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: cargo-application-secret
+                  key: db-user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cargo-application-secret
+                  key: db-password
+          #volumeMounts:
+          #  - mountPath: /var/lib/postgresql/data
+          #    name: cargo-app-db-storage
+      #volumes:
+        # - name: cargo-app-db-storage
+        #   persistentVolumeClaim:
+         #   claimName: cargo-app-db-pvc
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cargo-db-service
+spec:
+  selector:
+    app: cargo-app-db
+  ports:
+    - protocol: TCP
+      port: 9376
+      targetPort: 5432
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cargo-pgadmin-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cargo-pgadmin
+  template:
+    metadata:
+      labels:
+        app: cargo-pgadmin
+    spec:
+      containers:
+        - name: cargo-pgadmin
+          image: dpage/pgadmin4
+          ports:
+            - containerPort: 80
+          env:
+            - name: PGADMIN_DEFAULT_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: cargo-application-secret
+                  key: pg-email
+            - name: PGADMIN_DEFAULT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cargo-application-secret
+                  key: pg-password
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cargo-pgadmin-service
+spec:
+  selector:
+    app: cargo-pgadmin
+  ports:
+    - protocol: TCP
+      port: 9376
+      targetPort: 80
