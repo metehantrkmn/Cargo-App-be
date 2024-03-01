@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cargo-pgadmin-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cargo-pgadmin
+  template:
+    metadata:
+      labels:
+        app: cargo-pgadmin
+    spec:
+      containers:
+        - name: cargo-pgadmin
+          image: dpage/pgadmin4
+          ports:
+            - containerPort: 80
+          env:
+            - name: PGADMIN_DEFAULT_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: pg-email
+            - name: PGADMIN_DEFAULT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: pg-password
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cargo-pgadmin-service
+spec:
+  selector:
+    app: cargo-pgadmin
+  ports:
+    - protocol: TCP
+      port: 9378
+      targetPort: 80
+  type: NodePort
