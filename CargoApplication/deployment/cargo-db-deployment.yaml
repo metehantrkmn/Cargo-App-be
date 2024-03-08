@@ -1,3 +1,30 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /Users/metehanturkmen/Desktop/intellij projects/Kargo Takip Sistemi/CargoApplication/cargoPV
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -33,13 +60,13 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: db-password
-          #volumeMounts:
-          #  - mountPath: /var/lib/postgresql/data
-          #    name: cargo-app-db-storage
-        #volumes:
-        # - name: cargo-app-db-storage
-        #   persistentVolumeClaim:
-        #   claimName: cargo-app-db-pvc
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: cargo-volume
+      volumes:
+        - name: cargo-volume
+          persistentVolumeClaim:
+            claimName: postgres-pvc
 
 ---
 
