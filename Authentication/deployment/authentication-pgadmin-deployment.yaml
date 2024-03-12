@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-pgadmin-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-pgadmin
+  template:
+    metadata:
+      labels:
+        app: auth-pgadmin
+    spec:
+      containers:
+        - name: cargo-pgadmin
+          image: dpage/pgadmin4
+          ports:
+            - containerPort: 80
+          env:
+            - name: PGADMIN_DEFAULT_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: auth-postgres-secret
+                  key: pg-email
+            - name: PGADMIN_DEFAULT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: auth-postgres-secret
+                  key: pg-password
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentication-pgadmin-service
+spec:
+  selector:
+    app: auth-pgadmin
+  ports:
+    - protocol: TCP
+      port: 9381
+      targetPort: 80
+  type: NodePort

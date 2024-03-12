@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentication-deployment
+  labels:
+    app: authentication-application
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: authentication-application
+  template:
+    metadata:
+      labels:
+        app: authentication-application
+    spec:
+      containers:
+        - name: authentication-application-container
+          image: metehan1171/cargo-authentication-app:v1.0
+          ports:
+            - containerPort: 80
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentication-application-service
+spec:
+  selector:
+    app: authentication-application
+  ports:
+    - protocol: TCP
+      port: 9379
+      targetPort: 80

@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: auth-postgres-pv
+  labels:
+    app: auth-postgres-volume
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /Users/metehanturkmen/Desktop/intellij projects/Kargo Takip Sistemi/Authentication/authPV
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: auth-postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      app: auth-postgres-volume
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentication-db-service
+spec:
+  selector:
+    app: authentication-db
+  ports:
+    - protocol: TCP
+      port: 9380
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentication-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authentication-db
+  template:
+    metadata:
+      labels:
+        app: authentication-db
+    spec:
+      containers:
+        - name: authentication-db-container
+          image: postgres:latest
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: auth-postgres-secret
+                  key: db-name
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: auth-postgres-secret
+                  key: db-user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: auth-postgres-secret
+                  key: db-password
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: auth-volume
+      volumes:
+        - name: auth-volume
+          persistentVolumeClaim:
+            claimName: auth-postgres-pvc
+
